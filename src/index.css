@@ -71,8 +71,13 @@
   background: linear-gradient(to right, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.04) 4%, transparent 12%);
 }
 
-/* Print Stylesheet: hides all UI chrome and prints pure 1:1 broadsheet pages */
+/* Print Stylesheet: hides all UI chrome and prints pure 1:1 vector broadsheet pages */
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   body,
   html {
     background: #ffffff !important;
@@ -87,20 +92,25 @@
   .print-only-container {
     display: block !important;
     position: static !important;
-    width: 100% !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
-  .print-page-break {
+  .print-only-container > div {
     page-break-after: always;
     break-after: page;
-    margin: 0 !important;
-    box-shadow: none !important;
   }
 
-  .print-page-break:last-child {
+  .print-only-container > div:last-child {
     page-break-after: auto;
     break-after: auto;
+  }
+
+  .print-page-break {
+    margin: 0 !important;
+    box-shadow: none !important;
   }
 }
