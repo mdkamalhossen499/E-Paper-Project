@@ -1,0 +1,138 @@
+{
+  "entities": {
+    "BrandingSettings": {
+      "title": "BrandingSettings",
+      "description": "Newspaper masthead, logo, contact details, colors, and default page format configuration.",
+      "type": "object",
+      "properties": {
+        "bengaliNamePrefix": { "type": "string", "maxLength": 80 },
+        "bengaliNameMain": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "englishName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "tagline": { "type": "string", "maxLength": 200 },
+        "logoDataUrl": { "type": "string", "maxLength": 350000 },
+        "editorName": { "type": "string", "maxLength": 120 },
+        "publisherName": { "type": "string", "maxLength": 120 },
+        "officeAddress": { "type": "string", "maxLength": 250 },
+        "contactEmail": { "type": "string", "maxLength": 120 },
+        "contactPhone": { "type": "string", "maxLength": 60 },
+        "websiteUrl": { "type": "string", "maxLength": 200 },
+        "facebookHandle": { "type": "string", "maxLength": 120 },
+        "youtubeHandle": { "type": "string", "maxLength": 120 },
+        "primaryColor": { "type": "string", "maxLength": 20 },
+        "accentColor": { "type": "string", "maxLength": 20 },
+        "paperBackground": { "type": "string", "maxLength": 20 },
+        "priceText": { "type": "string", "maxLength": 80 },
+        "volumeText": { "type": "string", "maxLength": 80 },
+        "bloggerUrl": { "type": "string", "maxLength": 300 },
+        "showAds": { "type": "boolean" },
+        "defaultFormat": { "type": "string", "enum": ["A3", "A4"] },
+        "defaultOrientation": { "type": "string", "enum": ["portrait", "landscape"] },
+        "updatedBy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "bengaliNameMain",
+        "englishName",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "NewsArticle": {
+      "title": "NewsArticle",
+      "description": "Imported Blogger or manually authored Bengali news article grouped by Asia/Dhaka 8AM-8AM edition window.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "summary": { "type": "string", "maxLength": 2000 },
+        "content": { "type": "string", "maxLength": 30000 },
+        "imageUrl": { "type": "string", "maxLength": 2000 },
+        "imageCaption": { "type": "string", "maxLength": 400 },
+        "url": { "type": "string", "maxLength": 1000 },
+        "publishedAt": { "type": "string", "maxLength": 64 },
+        "dhakaEditionDate": { "type": "string", "minLength": 10, "maxLength": 10 },
+        "category": { "type": "string", "maxLength": 80 },
+        "author": { "type": "string", "maxLength": 120 },
+        "source": { "type": "string", "enum": ["blogger", "manual"] },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id",
+        "title",
+        "dhakaEditionDate",
+        "source",
+        "ownerId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "NewspaperEdition": {
+      "title": "NewspaperEdition",
+      "description": "Published or draft multi-page daily E-Paper edition.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "editionDate": { "type": "string", "minLength": 10, "maxLength": 10 },
+        "editionNumber": { "type": "number" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "format": { "type": "string", "enum": ["A3", "A4"] },
+        "orientation": { "type": "string", "enum": ["portrait", "landscape"] },
+        "totalPages": { "type": "number" },
+        "published": { "type": "boolean" },
+        "pages": { "type": "array" },
+        "ads": { "type": "array" },
+        "authorId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id",
+        "editionDate",
+        "editionNumber",
+        "title",
+        "format",
+        "orientation",
+        "totalPages",
+        "published",
+        "pages",
+        "authorId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized newspaper administrator role record.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "maxLength": 160 },
+        "role": { "type": "string", "enum": ["admin", "super_admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/settings/{settingsId}": {
+      "schema": { "$ref": "#/entities/BrandingSettings" },
+      "description": "Global newspaper masthead and branding configuration (document id: branding)."
+    },
+    "/articles/{articleId}": {
+      "schema": { "$ref": "#/entities/NewsArticle" },
+      "description": "Imported Blogger and manual articles indexed by Asia/Dhaka edition date."
+    },
+    "/editions/{editionId}": {
+      "schema": { "$ref": "#/entities/NewspaperEdition" },
+      "description": "Generated and archived daily E-Paper editions."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Admin authorization list."
+    }
+  }
+}

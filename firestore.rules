@@ -1,0 +1,217 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrapOwner() {
+      return isVerifiedUser() && request.auth.token.email == 'nkhdiary8@gmail.com';
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        isBootstrapOwner() ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // 3. Entity validators
+    function isValidBranding(data) {
+      return data.keys().hasAll(['bengaliNameMain', 'englishName', 'updatedBy', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'bengaliNamePrefix', 'bengaliNameMain', 'englishName', 'tagline',
+          'logoDataUrl', 'editorName', 'publisherName', 'officeAddress',
+          'contactEmail', 'contactPhone', 'websiteUrl', 'facebookHandle',
+          'youtubeHandle', 'primaryColor', 'accentColor', 'paperBackground',
+          'priceText', 'volumeText', 'bloggerUrl', 'showAds',
+          'defaultFormat', 'defaultOrientation', 'updatedBy', 'createdAt', 'updatedAt'
+        ])
+        && data.bengaliNameMain is string && data.bengaliNameMain.size() >= 1 && data.bengaliNameMain.size() <= 120
+        && data.englishName is string && data.englishName.size() >= 1 && data.englishName.size() <= 120
+        && data.updatedBy is string && data.updatedBy == request.auth.uid
+        && (!('bengaliNamePrefix' in data) || (data.bengaliNamePrefix is string && data.bengaliNamePrefix.size() <= 80))
+        && (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 200))
+        && (!('logoDataUrl' in data) || (data.logoDataUrl is string && data.logoDataUrl.size() <= 350000))
+        && (!('editorName' in data) || (data.editorName is string && data.editorName.size() <= 120))
+        && (!('publisherName' in data) || (data.publisherName is string && data.publisherName.size() <= 120))
+        && (!('officeAddress' in data) || (data.officeAddress is string && data.officeAddress.size() <= 250))
+        && (!('contactEmail' in data) || (data.contactEmail is string && data.contactEmail.size() <= 120))
+        && (!('contactPhone' in data) || (data.contactPhone is string && data.contactPhone.size() <= 60))
+        && (!('websiteUrl' in data) || (data.websiteUrl is string && data.websiteUrl.size() <= 200))
+        && (!('facebookHandle' in data) || (data.facebookHandle is string && data.facebookHandle.size() <= 120))
+        && (!('youtubeHandle' in data) || (data.youtubeHandle is string && data.youtubeHandle.size() <= 120))
+        && (!('primaryColor' in data) || (data.primaryColor is string && data.primaryColor.size() <= 20))
+        && (!('accentColor' in data) || (data.accentColor is string && data.accentColor.size() <= 20))
+        && (!('paperBackground' in data) || (data.paperBackground is string && data.paperBackground.size() <= 20))
+        && (!('priceText' in data) || (data.priceText is string && data.priceText.size() <= 80))
+        && (!('volumeText' in data) || (data.volumeText is string && data.volumeText.size() <= 80))
+        && (!('bloggerUrl' in data) || (data.bloggerUrl is string && data.bloggerUrl.size() <= 300))
+        && (!('showAds' in data) || data.showAds is bool)
+        && (!('defaultFormat' in data) || data.defaultFormat in ['A3', 'A4'])
+        && (!('defaultOrientation' in data) || data.defaultOrientation in ['portrait', 'landscape']);
+    }
+
+    function isValidArticle(data) {
+      return data.keys().hasAll(['id', 'title', 'dhakaEditionDate', 'source', 'ownerId', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'id', 'title', 'summary', 'content', 'imageUrl', 'imageCaption',
+          'url', 'publishedAt', 'dhakaEditionDate', 'category', 'author',
+          'source', 'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 400
+        && data.dhakaEditionDate is string && data.dhakaEditionDate.size() == 10
+        && data.source in ['blogger', 'manual']
+        && data.ownerId is string && data.ownerId == request.auth.uid
+        && (!('summary' in data) || (data.summary is string && data.summary.size() <= 2000))
+        && (!('content' in data) || (data.content is string && data.content.size() <= 30000))
+        && (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 2000))
+        && (!('imageCaption' in data) || (data.imageCaption is string && data.imageCaption.size() <= 400))
+        && (!('url' in data) || (data.url is string && data.url.size() <= 1000))
+        && (!('publishedAt' in data) || (data.publishedAt is string && data.publishedAt.size() <= 64))
+        && (!('category' in data) || (data.category is string && data.category.size() <= 80))
+        && (!('author' in data) || (data.author is string && data.author.size() <= 120));
+    }
+
+    function isValidEdition(data) {
+      return data.keys().hasAll(['id', 'editionDate', 'editionNumber', 'title', 'format', 'orientation', 'totalPages', 'published', 'pages', 'authorId', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'id', 'editionDate', 'editionNumber', 'title', 'format',
+          'orientation', 'totalPages', 'published', 'pages', 'ads',
+          'authorId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.editionDate is string && data.editionDate.size() == 10
+        && data.editionNumber is number && data.editionNumber >= 1
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.format in ['A3', 'A4']
+        && data.orientation in ['portrait', 'landscape']
+        && data.totalPages is number && data.totalPages >= 1 && data.totalPages <= 32
+        && data.published is bool
+        && data.pages is list && data.pages.size() >= 1 && data.pages.size() <= 32
+        && (!('ads' in data) || (data.ads is list && data.ads.size() <= 12))
+        && data.authorId is string && data.authorId == request.auth.uid;
+    }
+
+    function isValidAdmin(data, adminId) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'role', 'createdAt'])
+        && isValidId(data.uid)
+        && data.uid == adminId
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.role in ['admin', 'super_admin'];
+    }
+
+    // 4. Collection rules
+    match /settings/{settingsId} {
+      allow get: if isValidId(settingsId) && settingsId == 'branding';
+      allow create: if isValidId(settingsId)
+        && settingsId == 'branding'
+        && isAdmin()
+        && isValidBranding(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(settingsId)
+        && settingsId == 'branding'
+        && isAdmin()
+        && isValidBranding(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    match /articles/{articleId} {
+      allow get: if isValidId(articleId) && isAdmin();
+      allow list: if isVerifiedUser() && (
+        resource.data.ownerId == request.auth.uid ||
+        request.auth.token.email == 'nkhdiary8@gmail.com'
+      );
+      allow create: if isValidId(articleId)
+        && isAdmin()
+        && isValidArticle(incoming())
+        && incoming().id == articleId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(articleId)
+        && isAdmin()
+        && isValidArticle(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'summary', 'content', 'imageUrl', 'imageCaption',
+          'url', 'publishedAt', 'dhakaEditionDate', 'category', 'author', 'updatedAt'
+        ]);
+      allow delete: if isValidId(articleId) && isAdmin();
+    }
+
+    match /editions/{editionId} {
+      allow get: if isValidId(editionId) && (existing().published == true || isAdmin());
+      allow list: if resource.data.published == true || (
+        isVerifiedUser() && (
+          resource.data.authorId == request.auth.uid ||
+          request.auth.token.email == 'nkhdiary8@gmail.com'
+        )
+      );
+      allow create: if isValidId(editionId)
+        && isAdmin()
+        && isValidEdition(incoming())
+        && incoming().id == editionId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(editionId)
+        && isAdmin()
+        && isValidEdition(incoming())
+        && incoming().id == existing().id
+        && incoming().authorId == existing().authorId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'editionDate', 'editionNumber', 'title', 'format', 'orientation',
+          'totalPages', 'published', 'pages', 'ads', 'updatedAt'
+        ]);
+      allow delete: if isValidId(editionId) && isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (
+        (isSignedIn() && request.auth.uid == adminId) ||
+        isBootstrapOwner()
+      );
+      allow create: if isValidId(adminId)
+        && isBootstrapOwner()
+        && isValidAdmin(incoming(), adminId)
+        && incoming().createdAt == request.time;
+      allow update: if isValidId(adminId)
+        && isBootstrapOwner()
+        && isValidAdmin(incoming(), adminId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(adminId) && isBootstrapOwner() && adminId != request.auth.uid;
+    }
+  }
+}

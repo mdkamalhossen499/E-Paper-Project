@@ -1,0 +1,8 @@
+{
+  "name": "DHARA TV NEWS E-Paper",
+  "description": "Automatic Digital E-Paper Generator, Multi-Page Broadsheet Designer, Two-Page Flipbook Reader, and Print-Ready PDF Publisher for Bangladeshi Daily Newspapers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

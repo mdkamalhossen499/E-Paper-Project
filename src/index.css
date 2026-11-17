@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Public Sans', 'Hind Siliguri', system-ui, -apple-system, sans-serif;
+  }
+}
+
+.font-admin-display {
+  font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
+}
+
+.font-admin-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.font-bn-serif {
+  font-family: 'Noto Serif Bengali', 'Tiro Bangla', serif;
+}
+
+.font-bn-sans {
+  font-family: 'Hind Siliguri', 'Noto Serif Bengali', sans-serif;
+}
+
+.font-bn-editorial {
+  font-family: 'Tiro Bangla', 'Noto Serif Bengali', serif;
+}
+
+/* Newspaper Broadsheet Print & Rendering Rules */
+.newspaper-sheet {
+  background-color: var(--paper-bg, #fdfcf8);
+  color: #111827;
+  font-family: 'Noto Serif Bengali', 'Tiro Bangla', serif;
+  box-sizing: border-box;
+  overflow: hidden;
+  user-select: none;
+}
+
+.newspaper-body-text {
+  font-family: 'Tiro Bangla', 'Noto Serif Bengali', serif;
+  text-align: justify;
+  text-justify: inter-word;
+  line-height: 1.44;
+  hyphens: auto;
+  word-break: break-word;
+}
+
+.newspaper-headline {
+  font-family: 'Noto Serif Bengali', serif;
+  line-height: 1.14;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+/* 3D Flipbook perspective & page fold mechanics */
+.flipbook-perspective {
+  perspective: 2400px;
+}
+
+.flipbook-page-turn {
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flipbook-spine-left {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.04) 4%, transparent 12%);
+}
+
+.flipbook-spine-right {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.04) 4%, transparent 12%);
+}
+
+/* Print Stylesheet: hides all UI chrome and prints pure 1:1 broadsheet pages */
+@media print {
+  body,
+  html {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only-container {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-page-break {
+    page-break-after: always;
+    break-after: page;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .print-page-break:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
