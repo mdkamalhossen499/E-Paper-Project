@@ -27,6 +27,10 @@
         "showAds": { "type": "boolean" },
         "defaultFormat": { "type": "string", "enum": ["A3", "A4"] },
         "defaultOrientation": { "type": "string", "enum": ["portrait", "landscape"] },
+        "templateId": {
+          "type": "string",
+          "enum": ["template-01", "template-02", "template-03", "template-04", "template-05", "template-06"]
+        },
         "updatedBy": { "type": "string", "minLength": 1, "maxLength": 128 },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
@@ -81,6 +85,10 @@
         "title": { "type": "string", "minLength": 1, "maxLength": 200 },
         "format": { "type": "string", "enum": ["A3", "A4"] },
         "orientation": { "type": "string", "enum": ["portrait", "landscape"] },
+        "templateId": {
+          "type": "string",
+          "enum": ["template-01", "template-02", "template-03", "template-04", "template-05", "template-06"]
+        },
         "totalPages": { "type": "number" },
         "published": { "type": "boolean" },
         "pages": { "type": "array" },

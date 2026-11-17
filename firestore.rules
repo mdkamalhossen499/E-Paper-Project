@@ -47,7 +47,7 @@ service cloud.firestore {
           'contactEmail', 'contactPhone', 'websiteUrl', 'facebookHandle',
           'youtubeHandle', 'primaryColor', 'accentColor', 'paperBackground',
           'priceText', 'volumeText', 'bloggerUrl', 'showAds',
-          'defaultFormat', 'defaultOrientation', 'updatedBy', 'createdAt', 'updatedAt'
+          'defaultFormat', 'defaultOrientation', 'templateId', 'updatedBy', 'createdAt', 'updatedAt'
         ])
         && data.bengaliNameMain is string && data.bengaliNameMain.size() >= 1 && data.bengaliNameMain.size() <= 120
         && data.englishName is string && data.englishName.size() >= 1 && data.englishName.size() <= 120
@@ -71,7 +71,8 @@ service cloud.firestore {
         && (!('bloggerUrl' in data) || (data.bloggerUrl is string && data.bloggerUrl.size() <= 300))
         && (!('showAds' in data) || data.showAds is bool)
         && (!('defaultFormat' in data) || data.defaultFormat in ['A3', 'A4'])
-        && (!('defaultOrientation' in data) || data.defaultOrientation in ['portrait', 'landscape']);
+        && (!('defaultOrientation' in data) || data.defaultOrientation in ['portrait', 'landscape'])
+        && (!('templateId' in data) || data.templateId in ['template-01', 'template-02', 'template-03', 'template-04', 'template-05', 'template-06']);
     }
 
     function isValidArticle(data) {
@@ -100,7 +101,7 @@ service cloud.firestore {
       return data.keys().hasAll(['id', 'editionDate', 'editionNumber', 'title', 'format', 'orientation', 'totalPages', 'published', 'pages', 'authorId', 'createdAt', 'updatedAt'])
         && data.keys().hasOnly([
           'id', 'editionDate', 'editionNumber', 'title', 'format',
-          'orientation', 'totalPages', 'published', 'pages', 'ads',
+          'orientation', 'templateId', 'totalPages', 'published', 'pages', 'ads',
           'authorId', 'createdAt', 'updatedAt'
         ])
         && isValidId(data.id)
@@ -109,6 +110,7 @@ service cloud.firestore {
         && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
         && data.format in ['A3', 'A4']
         && data.orientation in ['portrait', 'landscape']
+        && (!('templateId' in data) || data.templateId in ['template-01', 'template-02', 'template-03', 'template-04', 'template-05', 'template-06'])
         && data.totalPages is number && data.totalPages >= 1 && data.totalPages <= 32
         && data.published is bool
         && data.pages is list && data.pages.size() >= 1 && data.pages.size() <= 32
@@ -192,7 +194,7 @@ service cloud.firestore {
         && incoming().updatedAt == request.time
         && incoming().diff(existing()).affectedKeys().hasOnly([
           'editionDate', 'editionNumber', 'title', 'format', 'orientation',
-          'totalPages', 'published', 'pages', 'ads', 'updatedAt'
+          'templateId', 'totalPages', 'published', 'pages', 'ads', 'updatedAt'
         ]);
       allow delete: if isValidId(editionId) && isAdmin();
     }

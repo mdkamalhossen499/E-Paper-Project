@@ -24,6 +24,7 @@ export const DEFAULT_BRANDING: BrandingSettings = {
   showAds: true,
   defaultFormat: 'A3',
   defaultOrientation: 'portrait',
+  templateId: 'template-01',
 };
 
 export const DEFAULT_ADS: NewspaperAd[] = [

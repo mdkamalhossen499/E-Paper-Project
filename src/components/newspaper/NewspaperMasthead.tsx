@@ -1,6 +1,7 @@
 import React from 'react';
-import { BrandingSettings, NewspaperPage } from '../../types/epaper';
+import { BrandingSettings, NewspaperPage, NewspaperTemplateId } from '../../types/epaper';
 import { formatBengaliNewspaperDate, toBengaliDigits } from '../../utils/dhakaTime';
+import { TemplateMastheadRouter } from './TemplateMastheads';
 
 interface NewspaperMastheadProps {
   branding: BrandingSettings;
@@ -8,6 +9,7 @@ interface NewspaperMastheadProps {
   page: NewspaperPage;
   totalPages: number;
   pages?: NewspaperPage[];
+  templateId?: NewspaperTemplateId;
 }
 
 export const FixedLogoBox: React.FC<{
@@ -79,7 +81,22 @@ export const NewspaperMasthead: React.FC<NewspaperMastheadProps> = ({
   page,
   totalPages,
   pages = [],
+  templateId,
 }) => {
+  const activeTemplate = templateId || branding.templateId || 'template-01';
+  if (activeTemplate !== 'template-01') {
+    return (
+      <TemplateMastheadRouter
+        templateId={activeTemplate}
+        branding={branding}
+        editionDate={editionDate}
+        page={page}
+        totalPages={totalPages}
+        pages={pages}
+      />
+    );
+  }
+
   const { weekdayBn, gregorianBn, banglaDateBn, hijriDateBn } =
     formatBengaliNewspaperDate(editionDate);
 

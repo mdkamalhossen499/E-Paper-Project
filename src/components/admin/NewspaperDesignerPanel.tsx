@@ -341,6 +341,7 @@ export const NewspaperDesignerPanel: React.FC<NewspaperDesignerPanelProps> = ({
               editionDate={edition.editionDate}
               format={edition.format}
               orientation={edition.orientation}
+              templateId={edition.templateId || branding.templateId}
               branding={branding}
               articlesMap={articlesMap}
               ads={edition.ads}

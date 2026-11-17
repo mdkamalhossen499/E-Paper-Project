@@ -5,6 +5,7 @@ import {
   NewsArticle,
   NewspaperAd,
   NewspaperPage,
+  NewspaperTemplateId,
   PageArticleSlot,
   PaperFormat,
   PaperOrientation,
@@ -19,6 +20,7 @@ interface NewspaperPageRendererProps {
   editionDate: string;
   format: PaperFormat;
   orientation: PaperOrientation;
+  templateId?: NewspaperTemplateId;
   branding: BrandingSettings;
   articlesMap: Record<string, NewsArticle>;
   ads: NewspaperAd[];
@@ -47,13 +49,17 @@ const ArticleSlotCard: React.FC<{
   slot: PageArticleSlot;
   article?: NewsArticle;
   branding: BrandingSettings;
+  templateId: NewspaperTemplateId;
   isFrontPage: boolean;
   editable?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
-}> = ({ slot, article, branding, isFrontPage, editable, isSelected, onSelect }) => {
+}> = ({ slot, article, branding, templateId, isFrontPage, editable, isSelected, onSelect }) => {
   const imageUrl = article?.imageUrl || '';
   const hasImage = slot.showImage && Boolean(imageUrl) && slot.imagePosition !== 'none';
+  const isClassicInk =
+    templateId === 'template-03' || templateId === 'template-04' || templateId === 'template-05';
+  const slotStyle = templateId === 'template-01' ? 'default' : slot.slotStyle || 'default';
 
   const charBudget = getBodyCharBudget(slot, isFrontPage);
   const rawBody = (slot.customContent || '').trim();
@@ -69,9 +75,16 @@ const ArticleSlotCard: React.FC<{
       ? 'columns-2 gap-2.5'
       : 'columns-1';
 
+  const headlineAlignClass =
+    templateId === 'template-02' && slot.role === 'lead'
+      ? 'text-center'
+      : slotStyle === 'editorial-box' || slotStyle === 'framed-crimson'
+      ? 'text-center'
+      : '';
+
   const headlineEl = (
     <h2
-      className={`newspaper-headline text-stone-950 ${getHeadlineSizeClass(
+      className={`newspaper-headline text-stone-950 ${headlineAlignClass} ${getHeadlineSizeClass(
         slot.headlineScale,
         slot.role
       )}`}
@@ -80,14 +93,29 @@ const ArticleSlotCard: React.FC<{
     </h2>
   );
 
-  const metaEl = (
+  const metaEl = isClassicInk ? (
+    <div className="flex items-center justify-between gap-2 my-1 pb-0.5 border-b border-stone-300 text-[8.5px] font-bn-serif italic text-stone-600">
+      <span className="font-semibold text-stone-800 not-italic uppercase tracking-wider">
+        {slot.customCategory || 'জাতীয়'}
+      </span>
+      <span className="truncate">{slot.customAuthor || 'নিজস্ব প্রতিবেদক'}</span>
+    </div>
+  ) : (
     <div className="flex items-center justify-between gap-2 my-1 pb-0.5 border-b border-stone-200 text-[9px] font-bn-sans">
       <div className="flex items-center gap-1 min-w-0">
         <span
           className="inline-block w-1.5 h-1.5 rotate-45 shrink-0"
-          style={{ backgroundColor: branding.accentColor }}
+          style={{
+            backgroundColor:
+              templateId === 'template-02' ? '#0284c7' : branding.accentColor,
+          }}
         />
-        <span className="font-bold truncate" style={{ color: branding.accentColor }}>
+        <span
+          className="font-bold truncate"
+          style={{
+            color: templateId === 'template-02' ? '#0284c7' : branding.accentColor,
+          }}
+        >
           {slot.customCategory || 'জাতীয়'}
         </span>
       </div>
@@ -127,9 +155,16 @@ const ArticleSlotCard: React.FC<{
     </figure>
   ) : null;
 
+  const bulletsBoxClass =
+    templateId === 'template-02'
+      ? 'mb-1.5 px-2 py-1.5 bg-amber-50/85 border border-amber-200 text-[9.5px] leading-[1.35] font-bn-sans text-stone-800 space-y-0.5 break-inside-avoid'
+      : slotStyle === 'framed-teal'
+      ? 'mb-1.5 px-2 py-1.5 bg-teal-50/80 border border-teal-200 text-[9.5px] leading-[1.35] font-bn-sans text-stone-800 space-y-0.5 break-inside-avoid'
+      : 'mb-1.5 px-2 py-1 bg-stone-100/90 border border-stone-200 text-[9.5px] leading-[1.35] font-bn-sans text-stone-800 space-y-0.5 break-inside-avoid';
+
   const bulletsBlock =
     slot.bulletPoints && slot.bulletPoints.length > 0 ? (
-      <div className="mb-1.5 px-2 py-1 bg-stone-100/90 border border-stone-200 text-[9.5px] leading-[1.35] font-bn-sans text-stone-800 space-y-0.5 break-inside-avoid">
+      <div className={bulletsBoxClass}>
         {slot.bulletPoints.map((bp, i) => (
           <div key={i} className="flex items-start gap-1.5">
             <span
@@ -142,6 +177,51 @@ const ArticleSlotCard: React.FC<{
       </div>
     ) : null;
 
+  const slotSurfaceClass =
+    slotStyle === 'framed-gold'
+      ? 'bg-amber-50/45 border-t-2 border-t-amber-500'
+      : slotStyle === 'framed-crimson'
+      ? 'bg-rose-50/35 border-t-2 border-t-red-700'
+      : slotStyle === 'framed-sky'
+      ? 'bg-sky-50/45 border-t-2 border-t-sky-700'
+      : slotStyle === 'framed-teal'
+      ? 'bg-white border-t-2 border-t-teal-700'
+      : slotStyle === 'analysis-box'
+      ? 'bg-stone-100/80 border-t-2 border-t-stone-900'
+      : slotStyle === 'editorial-box'
+      ? 'bg-white border border-stone-700'
+      : '';
+
+  const slotBannerBar =
+    templateId === 'template-06' && slotStyle !== 'default' ? (
+      <div
+        className="mb-1 px-2 py-0.5 text-[8.5px] font-bold font-bn-sans text-white flex items-center justify-between"
+        style={{
+          backgroundColor:
+            slotStyle === 'framed-gold'
+              ? '#d97706'
+              : slotStyle === 'framed-crimson'
+              ? '#b91c1c'
+              : slotStyle === 'framed-sky'
+              ? '#0369a1'
+              : slotStyle === 'framed-teal'
+              ? '#0f766e'
+              : '#1c1917',
+        }}
+      >
+        <span>
+          {slotStyle === 'editorial-box'
+            ? 'সম্পাদকের ডেস্ক থেকে'
+            : slot.customCategory || 'বিশেষ প্রতিবেদন'}
+        </span>
+        <span>●</span>
+      </div>
+    ) : templateId === 'template-04' && slotStyle === 'analysis-box' ? (
+      <div className="mb-1 text-[8px] font-bold uppercase tracking-widest text-stone-700 border-b border-stone-400 pb-0.5">
+        বিশেষ বিশ্লেষণ
+      </div>
+    ) : null;
+
   return (
     <article
       onClick={editable ? onSelect : undefined}
@@ -149,7 +229,7 @@ const ArticleSlotCard: React.FC<{
         gridColumn: `span ${slot.colSpan} / span ${slot.colSpan}`,
         gridRow: `span ${slot.rowSpan} / span ${slot.rowSpan}`,
       }}
-      className={`relative p-2 border-r border-b border-stone-300 flex flex-col overflow-hidden transition-shadow ${
+      className={`relative p-2 border-r border-b border-stone-300 flex flex-col overflow-hidden transition-shadow ${slotSurfaceClass} ${
         editable
           ? isSelected
             ? 'ring-2 ring-inset ring-blue-600 bg-blue-50/30 cursor-pointer'
@@ -157,6 +237,7 @@ const ArticleSlotCard: React.FC<{
           : ''
       }`}
     >
+      {slotBannerBar}
       {editable && isSelected && (
         <span className="absolute top-1 right-1 z-10 px-1.5 py-0.5 text-[9px] font-admin-display font-semibold bg-blue-600 text-white rounded">
           Editing
@@ -210,6 +291,7 @@ export const NewspaperPageRenderer: React.FC<NewspaperPageRendererProps> = ({
   editionDate,
   format,
   orientation,
+  templateId,
   branding,
   articlesMap,
   ads,
@@ -219,11 +301,17 @@ export const NewspaperPageRenderer: React.FC<NewspaperPageRendererProps> = ({
   scale = 1,
   pageRef,
 }) => {
+  const activeTemplate: NewspaperTemplateId =
+    templateId || branding.templateId || 'template-01';
   const { width, height, columns } = getCanvasDimensions(format, orientation);
   const { weekdayBn, gregorianBn } = formatBengaliNewspaperDate(editionDate);
 
   const gridColsClass = orientation === 'landscape' ? 'grid-cols-8' : 'grid-cols-6';
   const showAdsBar = page.showAdsOnPage && ads.length > 0;
+  const isClassicInk =
+    activeTemplate === 'template-03' ||
+    activeTemplate === 'template-04' ||
+    activeTemplate === 'template-05';
 
   return (
     <div
@@ -254,6 +342,7 @@ export const NewspaperPageRenderer: React.FC<NewspaperPageRendererProps> = ({
           page={page}
           totalPages={totalPages}
           pages={allPages}
+          templateId={activeTemplate}
         />
 
         {/* Broadsheet Multi-Column Grid */}
@@ -277,6 +366,7 @@ export const NewspaperPageRenderer: React.FC<NewspaperPageRendererProps> = ({
                 slot={slot}
                 article={articlesMap[slot.articleId]}
                 branding={branding}
+                templateId={activeTemplate}
                 isFrontPage={page.isFrontPage}
                 editable={editable}
                 isSelected={selectedSlotId === slot.slotId}
@@ -285,6 +375,25 @@ export const NewspaperPageRenderer: React.FC<NewspaperPageRendererProps> = ({
             ))
           )}
         </main>
+
+        {/* Classical 5-Column Bottom Index Digest Strip for Templates 03, 04, 05 */}
+        {isClassicInk && page.slots.length > 0 && (
+          <section className="mt-1.5 pt-1 border-t-2 border-stone-900 grid grid-cols-5 divide-x divide-stone-300 shrink-0">
+            {Array.from({ length: 5 }).map((_, idx) => {
+              const refSlot = page.slots[idx % page.slots.length];
+              return (
+                <div key={idx} className="px-1.5 min-w-0">
+                  <div className="text-[7.5px] font-bold uppercase tracking-wider text-stone-600 font-bn-sans">
+                    {refSlot?.customCategory || 'সংবাদ সূচি'} · পৃষ্ঠা {toBengaliDigits(Math.min(totalPages, idx + 1))}
+                  </div>
+                  <div className="text-[9px] font-bold font-bn-serif text-stone-900 leading-tight line-clamp-1 mt-0.5">
+                    {refSlot?.customTitle}
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        )}
 
         {/* Traditional Small Newspaper Advertisements Strip */}
         {showAdsBar && (

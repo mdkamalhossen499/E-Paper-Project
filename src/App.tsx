@@ -6,6 +6,7 @@ import {
   CheckSquare,
   FileDown,
   LayoutDashboard,
+  LayoutGrid,
   LayoutTemplate,
   Lock,
   Menu,
@@ -32,10 +33,12 @@ import {
   BrandingSettings,
   NewsArticle,
   NewspaperEdition,
+  NewspaperTemplateId,
   PaperFormat,
   PaperOrientation,
 } from './types/epaper';
 import { createInitialSeedArticles, DEFAULT_BRANDING } from './data/defaultData';
+import { NEWSPAPER_TEMPLATES } from './data/templates';
 import { getCurrentDhakaEditionDate } from './utils/dhakaTime';
 import { importFromBloggerUrl, mergeDeduplicatedArticles } from './utils/blogger';
 import { generateNewspaperEdition } from './utils/layoutEngine';
@@ -46,6 +49,7 @@ import { FlipbookViewer } from './components/flipbook/FlipbookViewer';
 import { DashboardOverview } from './components/admin/DashboardOverview';
 import { BloggerConnectionPanel } from './components/admin/BloggerConnectionPanel';
 import { AllNewsAndSelectPanel } from './components/admin/AllNewsAndSelectPanel';
+import { TemplateSelectionPanel } from './components/admin/TemplateSelectionPanel';
 import { NewspaperDesignerPanel } from './components/admin/NewspaperDesignerPanel';
 import { PdfPrintPanel } from './components/admin/PdfPrintPanel';
 import { ArchivePanel } from './components/admin/ArchivePanel';
@@ -60,6 +64,7 @@ const NAV_ITEMS: Array<{ id: AdminNavSection; label: string; icon: React.Compone
   { id: 'blogger', label: 'Blogger Connection', icon: Rss },
   { id: 'all-news', label: 'All News', icon: Newspaper },
   { id: 'select-news', label: 'Select News', icon: CheckSquare },
+  { id: 'templates', label: 'Newspaper Template Selection', icon: LayoutGrid },
   { id: 'designer', label: 'Newspaper Designer', icon: LayoutTemplate },
   { id: 'flipbook', label: 'Flipbook Preview', icon: BookOpen },
   { id: 'pdf-print', label: 'PDF Download & Print', icon: FileDown },
@@ -129,6 +134,7 @@ export default function App() {
         title: `${DEFAULT_BRANDING.bengaliNameMain} — দৈনিক সংস্করণ`,
         format: DEFAULT_BRANDING.defaultFormat,
         orientation: DEFAULT_BRANDING.defaultOrientation,
+        templateId: DEFAULT_BRANDING.templateId,
         showAds: DEFAULT_BRANDING.showAds,
       }),
     ];
@@ -144,6 +150,7 @@ export default function App() {
       title: `${DEFAULT_BRANDING.bengaliNameMain} — দৈনিক সংস্করণ`,
       format: DEFAULT_BRANDING.defaultFormat,
       orientation: DEFAULT_BRANDING.defaultOrientation,
+      templateId: DEFAULT_BRANDING.templateId,
       showAds: DEFAULT_BRANDING.showAds,
     });
   });
@@ -371,6 +378,7 @@ export default function App() {
       title: `${branding.bengaliNameMain} — ${editionDate}`,
       format: branding.defaultFormat,
       orientation: branding.defaultOrientation,
+      templateId: branding.templateId || 'template-01',
       showAds: branding.showAds,
       existingAds: activeEdition.ads,
     });
@@ -378,6 +386,62 @@ export default function App() {
     setActiveEdition(generated);
     setAdminSection('designer');
     showToast(`Generated ${generated.pages.length}-page newspaper edition.`);
+  };
+
+  const handleSelectTemplate = async (templateId: NewspaperTemplateId) => {
+    setIsSaving(true);
+    try {
+      const nextBranding: BrandingSettings = { ...branding, templateId };
+      setBranding(nextBranding);
+
+      const chosen = selectedArticleIds
+        .map((id) => articlesMap[id])
+        .filter(Boolean);
+      const sourceArticles = chosen.length > 0 ? chosen : articles;
+
+      const regenerated = generateNewspaperEdition({
+        articles: sourceArticles,
+        mainHeadlineArticleId: mainHeadlineId || sourceArticles[0]?.id,
+        editionDate: activeEdition.editionDate || getCurrentDhakaEditionDate(),
+        editionNumber: activeEdition.editionNumber || 1,
+        title: activeEdition.title || `${nextBranding.bengaliNameMain} — ${activeEdition.editionDate}`,
+        format: activeEdition.format || nextBranding.defaultFormat,
+        orientation: activeEdition.orientation || nextBranding.defaultOrientation,
+        templateId,
+        showAds: nextBranding.showAds,
+        existingAds: activeEdition.ads,
+      });
+
+      const updatedEdition: NewspaperEdition = {
+        ...regenerated,
+        id: activeEdition.id,
+        published: activeEdition.published,
+      };
+
+      setActiveEdition(updatedEdition);
+      setEditions((prev) => {
+        const exists = prev.some((e) => e.id === updatedEdition.id);
+        return exists
+          ? prev.map((e) => (e.id === updatedEdition.id ? updatedEdition : e))
+          : [updatedEdition, ...prev];
+      });
+
+      if (isAuthorizedAdmin) {
+        await saveBrandingToFirestore(nextBranding);
+        if (updatedEdition.published) {
+          await saveEditionToFirestore(updatedEdition);
+        }
+      }
+
+      const tplMeta = NEWSPAPER_TEMPLATES.find((t) => t.id === templateId);
+      showToast(
+        `${tplMeta ? `${tplMeta.code} (${tplMeta.name})` : templateId} applied across all pages.`
+      );
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to apply template.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveEditionToArchive = async (edition: NewspaperEdition) => {
@@ -544,6 +608,7 @@ export default function App() {
               editionDate={activeEdition.editionDate}
               format={activeEdition.format}
               orientation={activeEdition.orientation}
+              templateId={activeEdition.templateId || branding.templateId}
               branding={branding}
               articlesMap={articlesMap}
               ads={activeEdition.ads}
@@ -718,6 +783,18 @@ export default function App() {
               onAddManualArticle={handleAddManualArticle}
               onDeleteArticle={handleDeleteArticle}
               onGenerateNewspaper={handleGenerateNewspaper}
+            />
+          )}
+
+          {adminSection === 'templates' && (
+            <TemplateSelectionPanel
+              activeTemplateId={branding.templateId || 'template-01'}
+              branding={branding}
+              articles={articles}
+              selectedArticleIds={selectedArticleIds}
+              mainHeadlineId={mainHeadlineId}
+              onSelectTemplate={handleSelectTemplate}
+              isSaving={isSaving}
             />
           )}
 

@@ -68,6 +68,7 @@ export async function saveBrandingToFirestore(branding: BrandingSettings): Promi
     showAds: Boolean(branding.showAds),
     defaultFormat: branding.defaultFormat,
     defaultOrientation: branding.defaultOrientation,
+    templateId: branding.templateId || 'template-01',
     updatedBy: user.uid,
     updatedAt: serverTimestamp(),
   };
@@ -146,6 +147,7 @@ export async function saveEditionToFirestore(edition: NewspaperEdition): Promise
         title: edition.title.slice(0, 200),
         format: edition.format,
         orientation: edition.orientation,
+        templateId: edition.templateId || 'template-01',
         totalPages: edition.pages.length,
         published: Boolean(edition.published),
         pages: edition.pages,
@@ -160,6 +162,7 @@ export async function saveEditionToFirestore(edition: NewspaperEdition): Promise
         title: edition.title.slice(0, 200),
         format: edition.format,
         orientation: edition.orientation,
+        templateId: edition.templateId || 'template-01',
         totalPages: edition.pages.length,
         published: Boolean(edition.published),
         pages: edition.pages,

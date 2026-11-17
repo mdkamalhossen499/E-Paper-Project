@@ -1,5 +1,24 @@
 export type PaperFormat = 'A3' | 'A4';
 export type PaperOrientation = 'portrait' | 'landscape';
+export type NewspaperTemplateId =
+  | 'template-01'
+  | 'template-02'
+  | 'template-03'
+  | 'template-04'
+  | 'template-05'
+  | 'template-06';
+
+export interface NewspaperTemplateMeta {
+  id: NewspaperTemplateId;
+  code: string;
+  name: string;
+  bengaliName: string;
+  subtitle: string;
+  description: string;
+  columnsSummary: string;
+  mastheadStyle: string;
+  accentColor: string;
+}
 
 export interface BrandingSettings {
   bengaliNamePrefix: string;
@@ -24,6 +43,7 @@ export interface BrandingSettings {
   showAds: boolean;
   defaultFormat: PaperFormat;
   defaultOrientation: PaperOrientation;
+  templateId?: NewspaperTemplateId;
   updatedBy?: string;
   createdAt?: unknown;
   updatedAt?: unknown;
@@ -77,6 +97,15 @@ export interface PageArticleSlot {
   customCategory: string;
   bulletPoints: string[];
   continuationText: string;
+  slotStyle?:
+    | 'default'
+    | 'framed-gold'
+    | 'framed-crimson'
+    | 'framed-sky'
+    | 'framed-teal'
+    | 'analysis-box'
+    | 'editorial-box'
+    | 'digest-row';
 }
 
 export interface NewspaperAd {
@@ -103,6 +132,7 @@ export interface NewspaperEdition {
   title: string;
   format: PaperFormat;
   orientation: PaperOrientation;
+  templateId?: NewspaperTemplateId;
   totalPages: number;
   published: boolean;
   pages: NewspaperPage[];
@@ -117,6 +147,7 @@ export type AdminNavSection =
   | 'blogger'
   | 'all-news'
   | 'select-news'
+  | 'templates'
   | 'designer'
   | 'flipbook'
   | 'pdf-print'
